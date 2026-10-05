@@ -51,22 +51,30 @@ rules: {
 
 Para provocar uma falha no pipeline, adicione temporariamente um `console.log()` ao código ou declare uma variável sem utilizá-la.
 
-## SonarQube
+## SonarQube Cloud
 
-O arquivo `sonar-project.properties` define o projeto e informa ao SonarQube onde encontrar o relatório LCOV:
+A análise estática é feita no **SonarQube Cloud** (sonarcloud.io), executada pelo GitHub Actions na etapa `SonarQube Scan`, logo após a geração da cobertura.
+
+Configuração em `sonar-project.properties`:
 
 ```properties
+sonar.organization=mp-david
+sonar.projectKey=MP-David_ic-experimento
 sonar.javascript.lcov.reportPaths=coverage/lcov.info
 ```
 
-Antes de executar o workflow, crie no repositório GitHub os seguintes **Actions secrets**:
+A cobertura é gerada pelo Vitest no formato LCOV (configurado em `vite.config.js`) e enviada ao SonarQube junto com a análise.
 
-- `SONAR_HOST_URL`: URL do servidor SonarQube, por exemplo `https://sonarqube.exemplo.edu.br`.
-- `SONAR_TOKEN`: token de análise gerado no SonarQube.
+O token **não** está versionado: ele é lido do secret `SONAR_TOKEN` (Settings → Secrets and variables → Actions):
 
-Ajuste também `sonar.projectKey` em `sonar-project.properties` para a chave criada no seu servidor SonarQube.
+```yaml
+- name: SonarQube Scan
+  uses: SonarSource/sonarqube-scan-action@v7
+  env:
+    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+```
 
-> O workflow realiza a análise no SonarQube, mas não espera o resultado do Quality Gate. Isso permite apresentar a análise primeiro e adicionar o bloqueio pelo Quality Gate como evolução posterior da aula.
+> Para a análise via CI funcionar, a *Automatic Analysis* deve estar desativada no SonarQube Cloud (Administration → Analysis Method).
 
 ## Pipeline
 
@@ -83,7 +91,21 @@ Unit tests
    ↓
 Coverage
    ↓
-SonarQube
+SonarQube Scan
    ↓
 Build
 ```
+
+## Evidências da análise de qualidade
+
+### Pipeline
+
+![Pipeline](docs/evidencias/pipeline.png)
+
+### SonarQube
+
+![SonarQube](docs/evidencias/sonarqube.png)
+
+### Quality Gate
+
+![Quality Gate](docs/evidencias/quality-gate.png)
