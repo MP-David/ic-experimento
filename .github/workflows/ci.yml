@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -13,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # histórico completo melhora a análise do SonarQube
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,7 +33,12 @@ jobs:
         run: npm test
 
       - name: Test coverage
-        run: npm run coverage
+        run: npm run coverage # gera coverage/lcov.info, lido pelo SonarQube
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: Build
         run: npm run build
